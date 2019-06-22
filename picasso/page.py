@@ -3,6 +3,7 @@ import os
 import matplotlib.pyplot as plt
 
 from block import Block
+from processing import draw_bounding_boxes_on_image
 from processing import convert_to_image, translate_image_size_to_pdf_size
 from processing import extract_block_coords_from_image
 from processing import extract_block_image_from_coords
@@ -19,6 +20,7 @@ class Page:
         self.ratio = None
         self.blocks: list = []
         self.img = None
+        self.dilation_used = None
 
     def __repr__(self):
         return f'Page(id={self.id}, page={self.page}, blocks={len(self.blocks)})'
@@ -27,13 +29,18 @@ class Page:
         '''
         Starts the processing from pdf to image to blocks
         '''
+        self.dilation_used = dilation_iterations
+
+        # This is the heavy path. We make the image, extract blocks and text
         self.img = convert_to_image(self.path, self.page)
         self.ratio = translate_image_size_to_pdf_size(self.path, self.img, self.page)
         blocks_coords: list = extract_block_coords_from_image(self.img, dilation_iterations)
         blocks_images: list = extract_block_image_from_coords(self.img, blocks_coords)
         blocks_text: list = extract_block_text_from_coords(self.path, self.page, blocks_coords, self.ratio)
 
+        # Create Block instances based on the previously extracted info
         cnt = 0
+        self.blocks = [] # If process is called again, we want an empty list
         for img, text, coords in zip(blocks_images, blocks_text, blocks_coords):
             x,y,w,h = coords
             block_id = self.id + f'_block_{cnt}'
@@ -49,4 +56,8 @@ class Page:
         '''
         plt.imshow(self.img)
 
-    
+    def show_bounding_boxes(self):
+        pass
+        # Does not work
+        #image_w_boxes = draw_bounding_boxes_on_image(self.img, self.blocks) 
+        #plt.imshow(image_w_boxes)

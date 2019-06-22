@@ -33,6 +33,26 @@ def convert_to_image(path, page):
 
     return img_color
 
+def draw_bounding_boxes_on_image(img, blocks: list):
+    '''
+    Draws bounding boxes on an image
+
+    # TODO: DOES NOT WORK CORRECTLY
+    '''
+    
+    img_c = img.copy()
+
+    for block in blocks:
+        x = block.x
+        y = block.y
+        w = block.w
+        h = block.h
+        # Draws the rectangles for presentation purposes, you can comment it out
+        cv2.rectangle(img_c, (x,y), (x+w, y+h), (0,255,0), 1)
+        
+    return img_c
+
+
 def number_of_pages_in_pdf(path) -> int:
     # Get number of pages of pdf
     try:
@@ -100,9 +120,7 @@ def extract_block_coords_from_image(img, dilation_iterations: int = 6) -> list:
     return blocks[::-1] # reverse order
 
 
-        # Draws the rectangles for presentation purposes, you can comment it out
-        # cv2.rectangle(img, (x,y), (x+w, y+h), (0,255,0), 1)
-           
+          
 def extract_block_image_from_coords(img, coords: tuple) -> list:
     '''
     Extract the block specified in coords from the image

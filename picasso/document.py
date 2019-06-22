@@ -12,6 +12,7 @@ import cv2
 import numpy as np
 from PIL import Image, ImageDraw
 from progressbar import progressbar
+import seaborn as sns
 
 from page import Page
 from processing import number_of_pages_in_pdf
@@ -32,9 +33,17 @@ class Document:
     def __iter__(self):
         return iter(self.pages)
 
-    def process(self):
+    def process(self, dilation_iterations: int = 6):
         '''
         Starts to extract the structure of the document
         '''
         for page_object in progressbar(self.pages):
-            page_object.process()
+            page_object.process(dilation_iterations)
+
+    def show_dist(self):
+        '''
+        Plots distribution of blocks in documents 
+        this indicates whether you should adjust for the delation iteration
+        '''
+        x = [len(page.blocks) for page in self.pages]
+        sns.distplot(x)
