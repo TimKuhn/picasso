@@ -32,10 +32,9 @@ class Document:
     def __iter__(self):
         return iter(self.pages)
 
-    def process(self, dilution: int = 5, r: int = 150):
+    def process(self):
         '''
         Starts to extract the structure of the document
         '''
-        #for page_num in progressbar(self.num_pages):
-         #   p = Page(page_num)
-          #  p.process_image()
+        for page_object in progressbar(self.pages):
+            page_object.process()

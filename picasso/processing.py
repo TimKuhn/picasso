@@ -49,8 +49,11 @@ def extract_blocks_from_image(img, dilation_iterations: int = 6) -> [Block]:
     and returns identified blocks
     '''
 
+    # Convert to grayscale
+    img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
     # Edge Detection
-    edges = cv2.Canny(img, 100, 200)
+    edges = cv2.Canny(img_gray, 100, 200)
     kernel = np.ones((5,5), np.float32)/25
     ret, mask = cv2.threshold(edges, 0, 255, cv2.THRESH_BINARY)
 
@@ -62,24 +65,24 @@ def extract_blocks_from_image(img, dilation_iterations: int = 6) -> [Block]:
     contours, hierarchy = cv2.findContours(dilation, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     # Approximated rectangular areas are used to extract image area (blob)
-    img_blocks = []
+    blocks = []
     for i, c in enumerate(contours):
+        
+        # Extract area and a rectangular
         area = cv2.contourArea(c)
         x,y,w,h = cv2.boundingRect(c)
-        img_blocks.append((x,y,w,h))
+
+        # Construct a Block Object from the image block and the coords
+        img_block = img[y:y + h, x:x + w]
+        blocks.append((img_block, x, y, w, h))
                         
         # Draws the rectangles for presentation purposes, you can comment it out
-        cv2.rectangle(img, (x,y), (x+w, y+h), (0,255,0), 1)
-                                    
-    img_blocks = img_blocks[::-1] # Blobs are stored in wrong order
-                                        
-    print(f"Number of Blobs detected =>", len(img_blocks))
+        # cv2.rectangle(img, (x,y), (x+w, y+h), (0,255,0), 1)
+           
+    # Blocks are extracted in reversed order
+    blocks_right_order = []
+    for i, block_tuple in enumerate(reversed(blocks)):
+        img_block, x, y, w, h = block_tuple
+        blocks_right_order.append(Block(i, img_block, x, y, w, h))
 
-    return img_blocks
-
-
-
-
-
-
-
+    return blocks_right_order
