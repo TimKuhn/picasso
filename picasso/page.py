@@ -1,16 +1,22 @@
 from pathlib import Path
 import os
+import matplotlib.pyplot as plt
 
-from processing import convert_to_image, extract_blocks_from_image
+from block import Block
+from processing import convert_to_image, translate_image_size_to_pdf_size
+from processing import extract_block_coords_from_image
+from processing import extract_block_image_from_coords
+from processing import extract_block_text_from_coords
 
 class Page:
     '''
-    Page Element that holds Blocks
+    Page Element
     '''
     def __init__(self, path_to_pdf: Path, page: int):
         self.id: int = os.path.basename(path_to_pdf) + f'_page_{page}'
         self.page: int = page
         self.path: Path = path_to_pdf 
+        self.ratio = None
         self.blocks: list = []
         self.img = None
 
@@ -22,12 +28,25 @@ class Page:
         Starts the processing from pdf to image to blocks
         '''
         self.img = convert_to_image(self.path, self.page)
-        self.blocks = extract_blocks_from_image(self.img, dilation_iterations)
+        self.ratio = translate_image_size_to_pdf_size(self.path, self.img, self.page)
+        blocks_coords: list = extract_block_coords_from_image(self.img, dilation_iterations)
+        blocks_images: list = extract_block_image_from_coords(self.img, blocks_coords)
+        blocks_text: list = extract_block_text_from_coords(self.path, self.page, blocks_coords, self.ratio)
 
-    def show_original(self):
+        cnt = 0
+        for img, text, coords in zip(blocks_images, blocks_text, blocks_coords):
+            x,y,w,h = coords
+            block_id = self.id + f'_block_{cnt}'
+            self.blocks.append(Block(block_id, img, text, x, y, w, h))
+            cnt += 1
+
+    def save(self):
+        plt.imsave(self.id + '.png', self.img)
+
+    def show(self):
         '''
         Shows the original page as an image
         '''
-        pass
+        plt.imshow(self.img)
 
     

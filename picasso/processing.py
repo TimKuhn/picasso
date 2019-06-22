@@ -43,7 +43,27 @@ def number_of_pages_in_pdf(path) -> int:
         print(f'No number of pages found for `{path}`')
         return 0
 
-def extract_blocks_from_image(img, dilation_iterations: int = 6) -> [Block]:
+def translate_image_size_to_pdf_size(path_to_pdf, img, page) -> float:
+    '''
+    Calculates ratio that is needed to translate between
+    image size and pdf size. This is for example required 
+    for text extraction with `pdftotext`
+
+    returns: ratio 
+    '''
+    # Get y and x of the original image
+    y_img, x_img, _ = img.shape
+
+    # Get the layout of the PDF with pdfinfo
+    out = check_output(["pdfinfo", "-rawdates", f"{path_to_pdf}"])
+    matches = re.search('(\d+)\.\d+\sx\s(\d+)\.\d+', str(out))
+    x_pdf = int(matches.group(1))
+    y_pdf = int(matches.group(2))
+
+    # Get the translation Ratio 
+    return x_pdf/x_img
+
+def extract_block_coords_from_image(img, dilation_iterations: int = 6) -> list:
     '''
     Takes an image, transforms and pre-processes it
     and returns identified blocks
@@ -67,22 +87,62 @@ def extract_blocks_from_image(img, dilation_iterations: int = 6) -> [Block]:
     # Approximated rectangular areas are used to extract image area (blob)
     blocks = []
     for i, c in enumerate(contours):
-        
         # Extract area and a rectangular
         area = cv2.contourArea(c)
         x,y,w,h = cv2.boundingRect(c)
 
         # Construct a Block Object from the image block and the coords
-        img_block = img[y:y + h, x:x + w]
-        blocks.append((img_block, x, y, w, h))
-                        
+        #img_block = img[y:y + h, x:x + w]
+        #blocks.append((img_block, x, y, w, h))
+        
+        blocks.append((x,y,w,h))
+
+    return blocks[::-1] # reverse order
+
+
         # Draws the rectangles for presentation purposes, you can comment it out
         # cv2.rectangle(img, (x,y), (x+w, y+h), (0,255,0), 1)
            
-    # Blocks are extracted in reversed order
-    blocks_right_order = []
-    for i, block_tuple in enumerate(reversed(blocks)):
-        img_block, x, y, w, h = block_tuple
-        blocks_right_order.append(Block(i, img_block, x, y, w, h))
+def extract_block_image_from_coords(img, coords: tuple) -> list:
+    '''
+    Extract the block specified in coords from the image
+    '''
 
-    return blocks_right_order
+    image_blocks = []
+    for i, coord in enumerate(coords):
+        x, y, w, h = coord
+        image_block = img[y:y + h, x:x + w]
+        image_blocks.append(image_block)
+
+    return image_blocks
+
+def extract_block_text_from_coords(path_to_pdf, page: int, coords: tuple, r: float) -> list:
+    """
+    Takes a blob which consists of 4 coordinates (x,y,h,w)
+    it also takes the translation ratio 'r' that is required
+    to translate the coordinates from the image to the pdf
+
+    Then pdftotext takes the coordinates to extract the text 
+    from the area
+
+    Returns: str: blob_text
+    """
+
+    blocks_text = []
+    for coord in coords:
+        # Extract block coordinates
+        x,y,w,h = coord
+
+        # Translated coordinates
+        x_new, y_new, w_new, h_new = int(x*r) ,int(y*r), int(w*r), int(h*r) 
+
+        # Use Pdftotext to get blobs
+        os.system(f"pdftotext -layout -l {page} -f {page} -x {x_new} -y {y_new} -W {w_new} -H {h_new} {path_to_pdf} ./tmp.txt")
+        with open('./tmp.txt', "r") as f:
+            block_text = f.read()
+
+        os.remove('./tmp.txt')
+
+        blocks_text.append(block_text)
+
+    return blocks_text
