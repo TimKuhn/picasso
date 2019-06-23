@@ -19,7 +19,7 @@ class Page:
         self.path: Path = path_to_pdf 
         self.ratio = None
         self.blocks: list = []
-        self.img = None
+        self.img = None # Numpy array
         self.dilation_used = None
 
     def __iter__(self):
@@ -47,7 +47,9 @@ class Page:
         for img, text, coords in zip(blocks_images, blocks_text, blocks_coords):
             x,y,w,h = coords
             block_id = self.id + f'_block_{cnt}'
-            self.blocks.append(Block(block_id, img, text, x, y, w, h))
+            img_page = self.img
+            b = Block(block_id, img, text, x, y, w, h, img_page)
+            self.blocks.append(b)
             cnt += 1
 
     def save(self):
