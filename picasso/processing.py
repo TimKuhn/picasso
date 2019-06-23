@@ -1,4 +1,4 @@
-import os
+import os, sys
 import glob
 from subprocess import check_output
 import re
@@ -39,17 +39,14 @@ def convert_to_image(path, page):
 def draw_bounding_boxes_on_image(img, blocks: list):
     '''
     Draws bounding boxes on an image
-
-    # TODO: DOES NOT WORK CORRECTLY
     '''
-
 
     for block in blocks:
         x = block.x
         y = block.y
         w = block.w
         h = block.h
-        cv2.rectangle(img, (x,y), (x+w, y+h), (0,255,0), 1)
+        cv2.rectangle(img, (x,y), (x+w, y+h), (0,0,255), 2)
         
     plt.imshow(img)
 
@@ -76,12 +73,17 @@ def translate_image_size_to_pdf_size(path_to_pdf, img, page) -> float:
 
     # Get the layout of the PDF with pdfinfo
     out = check_output(["pdfinfo", "-rawdates", f"{path_to_pdf}"])
-    matches = re.search('(\d+)\.\d+\sx\s(\d+)\.\d+', str(out))
-    x_pdf = int(matches.group(1))
-    y_pdf = int(matches.group(2))
+    matches = re.search('(\d+)(\.\d+)?\s+x\s+(\d+)(\.\d+)?', str(out))
+    if matches:
+        x_pdf = int(matches.group(1))
+        y_pdf = int(matches.group(3))
 
-    # Get the translation Ratio 
-    return x_pdf/x_img
+        # Get the translation Ratio 
+        return x_pdf/x_img
+
+    else:
+        print('ERROR: cannot find size of pdf page -> EXITING')
+        sys.exit()
 
 def extract_block_coords_from_image(img, dilation_iterations: int = 6) -> list:
     '''

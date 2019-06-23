@@ -62,5 +62,4 @@ class Page:
         plt.imshow(self.img)
 
     def show_bounding_boxes(self):
-        # Does not work
         draw_bounding_boxes_on_image(self.img, self.blocks) 
