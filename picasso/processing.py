@@ -3,8 +3,11 @@ import glob
 from subprocess import check_output
 import re
 
+import matplotlib.pyplot as plt
 import cv2
 import numpy as np
+
+from PIL import Image
 
 from block import Block
 
@@ -22,7 +25,7 @@ def convert_to_image(path, page):
     output_path = './tmp' # Save to current directory, will be deleted later
     
     # External linux command
-    os.system(f'pdftocairo -{output_type} -r {resolution} -f {page} -l {page} {path} {output_path}')
+    os.system(f'pdftocairo -q -{output_type} -r {resolution} -f {page} -l {page} {path} {output_path}')
 
     # the name we give `tmp` is appended by the page, so the name is unclear
     img_path = glob.glob('tmp*.png')[0] 
@@ -39,19 +42,17 @@ def draw_bounding_boxes_on_image(img, blocks: list):
 
     # TODO: DOES NOT WORK CORRECTLY
     '''
-    
-    img_c = img.copy()
 
     for block in blocks:
         x = block.x
         y = block.y
         w = block.w
         h = block.h
-        # Draws the rectangles for presentation purposes, you can comment it out
-        cv2.rectangle(img_c, (x,y), (x+w, y+h), (0,255,0), 1)
+        cv2.rectangle(img, (x,y), (x+w, y+h), (0,255,0), 1)
         
-    return img_c
-
+    #plt.imshow(img)
+    image = Image.fromarray(img)
+    image.save('out.png')
 
 def number_of_pages_in_pdf(path) -> int:
     # Get number of pages of pdf
@@ -155,7 +156,7 @@ def extract_block_text_from_coords(path_to_pdf, page: int, coords: tuple, r: flo
         x_new, y_new, w_new, h_new = int(x*r) ,int(y*r), int(w*r), int(h*r) 
 
         # Use Pdftotext to get blobs
-        os.system(f"pdftotext -layout -l {page} -f {page} -x {x_new} -y {y_new} -W {w_new} -H {h_new} {path_to_pdf} ./tmp.txt")
+        os.system(f"pdftotext -q -layout -l {page} -f {page} -x {x_new} -y {y_new} -W {w_new} -H {h_new} {path_to_pdf} ./tmp.txt")
         with open('./tmp.txt', "r") as f:
             block_text = f.read()
 

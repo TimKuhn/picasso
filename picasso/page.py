@@ -22,6 +22,9 @@ class Page:
         self.img = None
         self.dilation_used = None
 
+    def __iter__(self):
+        return iter(self.blocks)
+
     def __repr__(self):
         return f'Page(id={self.id}, page={self.page}, blocks={len(self.blocks)})'
 
@@ -57,7 +60,5 @@ class Page:
         plt.imshow(self.img)
 
     def show_bounding_boxes(self):
-        pass
         # Does not work
-        #image_w_boxes = draw_bounding_boxes_on_image(self.img, self.blocks) 
-        #plt.imshow(image_w_boxes)
+        draw_bounding_boxes_on_image(self.img, self.blocks) 
