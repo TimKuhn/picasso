@@ -43,6 +43,7 @@ def draw_bounding_boxes_on_image(img, blocks: list):
     # TODO: DOES NOT WORK CORRECTLY
     '''
 
+
     for block in blocks:
         x = block.x
         y = block.y
@@ -50,9 +51,7 @@ def draw_bounding_boxes_on_image(img, blocks: list):
         h = block.h
         cv2.rectangle(img, (x,y), (x+w, y+h), (0,255,0), 1)
         
-    #plt.imshow(img)
-    image = Image.fromarray(img)
-    image.save('out.png')
+    plt.imshow(img)
 
 def number_of_pages_in_pdf(path) -> int:
     # Get number of pages of pdf
