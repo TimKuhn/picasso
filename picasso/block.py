@@ -13,7 +13,7 @@ class Block:
         self.id: int = i
         self.img = block_img
         self.img_page = page_img
-        self.x = w
+        self.x = x
         self.y = y
         self.w = w
         self.h = h
