@@ -157,7 +157,7 @@ def extract_block_text_from_coords(path_to_pdf, page: int, coords: tuple, r: flo
         x_new, y_new, w_new, h_new = int(x*r) ,int(y*r), int(w*r), int(h*r) 
 
         # Use Pdftotext to get blobs
-        os.system(f"pdftotext -q -layout -l {page} -f {page} -x {x_new} -y {y_new} -W {w_new} -H {h_new} {path_to_pdf} ./tmp.txt")
+        os.system(f"pdftotext -q -enc 'UTF-8' -layout -l {page} -f {page} -x {x_new} -y {y_new} -W {w_new} -H {h_new} {path_to_pdf} ./tmp.txt")
         with open('./tmp.txt', "r") as f:
             block_text = f.read()
 
