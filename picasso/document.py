@@ -19,7 +19,12 @@ from processing import number_of_pages_in_pdf
 
 class Document:
     '''
-    Assumes path to a PDF (no OCR)
+    Assumes path to a PDF
+
+    >>> document = Document('/path/to/pdf')
+    >>> document.process() # runs the block extraction
+    >>> document.pages[0] # to access single pages, or
+    >>> document.pages[0].blocks[0] # to access block
     '''
     def __init__(self, path_to_pdf: Path):
         self.path = path_to_pdf
