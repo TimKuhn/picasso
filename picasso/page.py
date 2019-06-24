@@ -1,7 +1,7 @@
 from pathlib import Path
 import os
 import matplotlib.pyplot as plt
-
+import pytesseract
 from block import Block
 from processing import draw_bounding_boxes_on_image
 from processing import convert_to_image, translate_image_size_to_pdf_size
@@ -28,7 +28,7 @@ class Page:
     def __repr__(self):
         return f'Page(id={self.id}, page={self.page}, blocks={len(self.blocks)})'
 
-    def process(self, dilation_iterations: int = 6):
+    def process(self, dilation_iterations: int = 6, ocr=False):
         '''
         Starts the processing from pdf to image to blocks
         '''
@@ -39,8 +39,11 @@ class Page:
         self.ratio = translate_image_size_to_pdf_size(self.path, self.img, self.page)
         blocks_coords: list = extract_block_coords_from_image(self.img, dilation_iterations)
         blocks_images: list = extract_block_image_from_coords(self.img, blocks_coords)
-        blocks_text: list = extract_block_text_from_coords(self.path, self.page, blocks_coords, self.ratio)
-
+        if not ocr:
+            blocks_text: list = extract_block_text_from_coords(self.path, self.page, blocks_coords, self.ratio)
+        elif ocr:
+            blocks_text: list = [pytesseract.image_to_string(img) for img in blocks_images]
+        
         # Create Block instances based on the previously extracted info
         cnt = 0
         self.blocks = [] # If process is called again, we want an empty list

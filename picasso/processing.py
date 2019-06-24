@@ -25,7 +25,8 @@ def convert_to_image(path, page):
     output_path = './tmp' # Save to current directory, will be deleted later
     
     # External linux command
-    os.system(f'pdftocairo -q -{output_type} -r {resolution} -f {page} -l {page} {path} {output_path}')
+    cmd = f"pdftocairo -q -{output_type} -r {resolution} -f {page} -l {page} '{path}' {output_path}"
+    os.system(cmd)
 
     # the name we give `tmp` is appended by the page, so the name is unclear
     img_path = glob.glob('tmp*.png')[0] 
@@ -121,8 +122,6 @@ def extract_block_coords_from_image(img, dilation_iterations: int = 6) -> list:
 
     return blocks[::-1] # reverse order
 
-
-          
 def extract_block_image_from_coords(img, coords: tuple) -> list:
     '''
     Extract the block specified in coords from the image
@@ -157,10 +156,14 @@ def extract_block_text_from_coords(path_to_pdf, page: int, coords: tuple, r: flo
         x_new, y_new, w_new, h_new = int(x*r) ,int(y*r), int(w*r), int(h*r) 
 
         # Use Pdftotext to get blobs
-        os.system(f"pdftotext -q -enc 'UTF-8' -layout -l {page} -f {page} -x {x_new} -y {y_new} -W {w_new} -H {h_new} {path_to_pdf} ./tmp.txt")
+        cmd = f"pdftotext -q -enc 'UTF-8' -layout -l {page} -f {page} -x {x_new} -y {y_new} -W {w_new} -H {h_new} '{path_to_pdf}' ./tmp.txt"
+        os.system(cmd)
+
+        # pdftotext writes temporary file to disk and we read the input in
         with open('./tmp.txt', "r") as f:
             block_text = f.read()
 
+        # Delete the temp file
         os.remove('./tmp.txt')
 
         blocks_text.append(block_text)

@@ -25,20 +25,22 @@ class Document:
         self.path = path_to_pdf
         self.name = os.path.basename(self.path)
         self.num_pages = number_of_pages_in_pdf(self.path)
-        self.pages = [Page(self.path, i) for i in range(1, self.num_pages)] # Need to start at 1 for pdftocairo
+        self.pages = [Page(self.path, i) for i in range(1, self.num_pages + 1)] # Need to start at 1 for pdftocairo
+        self.ocr = False
 
     def __repr__(self):
-        return f'Document(name={self.name}, num_pages={self.num_pages}, path={self.path})'
+        return f'Document(name={self.name}, num_pages={self.num_pages}, path={self.path}, ocr={self.ocr})'
 
     def __iter__(self):
         return iter(self.pages)
 
-    def process(self, dilation_iterations: int = 6):
+    def process(self, dilation_iterations: int = 6, ocr=False):
         '''
         Starts to extract the structure of the document
         '''
+        self.ocr = ocr
         for page_object in progressbar(self.pages):
-            page_object.process(dilation_iterations)
+            page_object.process(dilation_iterations, self.ocr)
 
     def show_dist(self):
         '''
