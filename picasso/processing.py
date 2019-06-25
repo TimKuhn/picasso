@@ -9,8 +9,6 @@ import numpy as np
 
 from PIL import Image
 
-from block import Block
-
 def convert_to_image(path, page):
     '''
     Converts a PDF page to png image
