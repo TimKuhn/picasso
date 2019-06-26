@@ -16,7 +16,8 @@ from PIL import Image, ImageDraw
 from progressbar import progressbar
 import seaborn as sns
 
-#from picasso.page import Page
+from pygame import Rect # TODO: Find an alternative
+
 from picasso.processing import number_of_pages_in_pdf
 from picasso.processing import draw_bounding_boxes_on_image
 from picasso.processing import convert_to_image, translate_image_size_to_pdf_size
@@ -96,6 +97,18 @@ class Block:
 
     def show(self):
         plt.imshow(self.img)
+
+    def collides_with(self, other) -> bool:
+        '''
+        Evalutes whether this object collides with another Block
+        Object. Returns True if they overlap and False otherwise
+        '''
+        rect_self = Rect(self.x, self.y, self.w, self.h)
+        rect_other = Rect(other.x, other.y, other.w, other.h)
+        if rect_self.colliderect(rect_other):
+            return True
+        else:
+            return False
 
     def _normalized_area(self) -> float:
         '''
