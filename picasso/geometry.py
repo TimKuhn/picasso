@@ -1,7 +1,23 @@
-
-
-
 from itertools import product, tee
+from pygame import Rect
+
+def block_overlaps(block1, block2) -> bool:
+    '''
+    Assumes two block objects and returns True if
+    they overlap and False otherwise
+    '''
+    rect1 = Rect(block1.x, block1.y, block1.w, block1.h)
+    rect2 = Rect(block2.x, block2.y, block2.w, block2.h)
+    return rect1.colliderect(rect2)
+
+
+
+
+#############################################
+#                                           #
+#           Can it be deleted???            #
+#                                           #
+#############################################
 
 def test():
     print('\nExample 1:')
@@ -44,7 +60,7 @@ def pairwise(iterable):
 
 
 
-class Rectangle:
+class Rectangle_OLD:
     __slots__ = '__x1', '__y1', '__x2', '__y2'
 
     def __init__(self, x1, y1, x2, y2):
