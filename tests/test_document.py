@@ -1,7 +1,9 @@
 import pytest
+from pytest_mock import mocker
 import os
 from picasso.document import Document, Page, Block
 from reportlab.pdfgen import canvas
+import numpy as np
 
 
 class TestDocument(object):
@@ -47,6 +49,7 @@ class TestDocument(object):
         except:
             pass
 
+
 class TestPage(object):
     @classmethod
     def setup_class(cls):
@@ -64,3 +67,24 @@ class TestPage(object):
 
     def test_page_has_correct_id(self):
         assert self.p.id == 'test.pdf_page_1'
+
+
+class TestBlock(object):
+    def test_block_collides(self, mocker):
+        '''
+        Should return true for the two blocks specified in this 
+        function.
+        '''
+        # Patching a function that requires a real image
+        mocker.patch.object(Block, '_normalized_area')
+        Block._normalized_area.return_value = 0.53
+
+        b1 = Block(i=1,block_img=1,block_text="",x=154,y=82,w=1041,h=396,page_img=1)
+        b2 = Block(i=2,block_img=1,block_text="",x=152,y=358,w=469,h=170,page_img=1)
+        
+        assert b1.collides_with(b2) == True
+
+
+
+
+
