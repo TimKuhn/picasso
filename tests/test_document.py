@@ -14,7 +14,8 @@ class TestDocument(object):
         cls.path = '/tmp/test.pdf'
         c = canvas.Canvas(cls.path)
         # Creates 1 Page and 1 Block
-        c.drawString(100, 750, f'This is a test block that\nI want to parse!!!')
+        cls.text = f'This is a test block that\nI want to parse!!!'
+        c.drawString(100, 750, cls.text)
         c.save()
         
         # Document processing
@@ -26,6 +27,14 @@ class TestDocument(object):
 
     def test_document_returns_one_block(self):
         assert len(self.d.pages[0].blocks) == 1
+
+    def test_document_block_has_text_parsed(self):
+        """
+        Parsing might contain special characters that are not 
+        correctly encoded. Therefore, it might produce more text than 
+        initially stored in text variable.
+        """
+        assert len(self.d.pages[0].blocks[0].text) >= len(self.text)
 
     @classmethod
     def teardown_class(cls):

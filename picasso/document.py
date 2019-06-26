@@ -8,7 +8,6 @@ import pickle
 from pathlib import Path
 from subprocess import check_output
 
-import pytesseract
 import matplotlib.pyplot as plt
 import textwrap
 import cv2
@@ -53,6 +52,10 @@ class Document:
         Starts to extract the structure of the document
         '''
         self.ocr = ocr
+        if self.ocr:
+            # Load Module
+            import pytesseract
+            
         for page_object in progressbar(self.pages):
             page_object.process(dilation_iterations, self.ocr)
 
@@ -94,6 +97,7 @@ class Block:
     def show(self):
         plt.imshow(self.img)
 
+
 class Page:
     '''
     Page Element
@@ -124,10 +128,10 @@ class Page:
         self.ratio = translate_image_size_to_pdf_size(self.path, self.img, self.page)
         blocks_coords: list = extract_block_coords_from_image(self.img, dilation_iterations)
         blocks_images: list = extract_block_image_from_coords(self.img, blocks_coords)
-        if not ocr:
-            blocks_text: list = extract_block_text_from_coords(self.path, self.page, blocks_coords, self.ratio)
-        elif ocr:
+        if ocr:
             blocks_text: list = [pytesseract.image_to_string(img) for img in blocks_images]
+        else:
+            blocks_text: list = extract_block_text_from_coords(self.path, self.page, blocks_coords, self.ratio)
         
         # Create Block instances based on the previously extracted info
         cnt = 0
@@ -140,8 +144,9 @@ class Page:
             self.blocks.append(b)
             cnt += 1
 
-    def save(self):
-        plt.imsave(self.id + '.png', self.img)
+    def save(self, path='./'):
+        out_path = os.path.join(path, self.id + '.png')
+        plt.imsave(out_path, self.img)
 
     def show(self):
         '''
@@ -151,5 +156,4 @@ class Page:
 
     def show_bounding_boxes(self):
         draw_bounding_boxes_on_image(self.img, self.blocks) 
-
 
