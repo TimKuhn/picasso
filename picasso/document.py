@@ -83,7 +83,7 @@ class Block:
         self.y = y
         self.w = w
         self.h = h
-        self.area = h*w # TODO: Calculate normalized area (e.g. 30% of page)
+        self.area = self._normalized_area()
         self.text = block_text
         self.type = None # table, text-block, heading, footer
 
@@ -97,6 +97,14 @@ class Block:
     def show(self):
         plt.imshow(self.img)
 
+    def _normalized_area(self) -> float:
+        '''
+        Calculates a normalized area in %
+        Should be max 1.0 when the block takes the complete area of the page
+        '''
+        h_page = self.img_page.shape[0]
+        w_page = self.img_page.shape[1]
+        return round((self.h*self.w) / (h_page * w_page), ndigits=2) 
 
 class Page:
     '''
@@ -143,6 +151,17 @@ class Page:
             b = Block(block_id, img, text, x, y, w, h, img_page)
             self.blocks.append(b)
             cnt += 1
+
+    def area_occupied(self) -> float:
+        '''
+        Calculates the area that is occupied by the extracted blocks.
+        Return floating point number (e.g. 0.54). Meaning that the page
+        is covered to 54% with blocks
+
+        Could return a number greater > 1.0 when blocks overlap 
+        this could be an indicator that a smaller dilation is necessary
+        '''
+        return round(sum([b.area for b in self.blocks]), ndigits=2)
 
     def save(self, path='./'):
         out_path = os.path.join(path, self.id + '.png')

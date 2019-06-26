@@ -111,11 +111,7 @@ def extract_block_coords_from_image(img, dilation_iterations: int = 6) -> list:
         # Extract area and a rectangular
         area = cv2.contourArea(c)
         x,y,w,h = cv2.boundingRect(c)
-
-        # Construct a Block Object from the image block and the coords
-        #img_block = img[y:y + h, x:x + w]
-        #blocks.append((img_block, x, y, w, h))
-        
+       
         blocks.append((x,y,w,h))
 
     return blocks[::-1] # reverse order
