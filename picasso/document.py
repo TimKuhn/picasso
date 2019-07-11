@@ -16,7 +16,7 @@ from PIL import Image, ImageDraw
 from progressbar import progressbar
 import seaborn as sns
 
-from pygame import Rect # TODO: Find an alternative
+#from pygame import Rect # TODO: Find an alternative
 
 from picasso.processing import number_of_pages_in_pdf
 from picasso.processing import draw_bounding_boxes_on_image
@@ -48,7 +48,7 @@ class Document:
     def __iter__(self):
         return iter(self.pages)
 
-    def process(self, dilation_iterations: int = 6, ocr=False):
+    def process(self, dilation_iterations: int = 3, ocr=False):
         '''
         Starts to extract the structure of the document
         '''
@@ -98,6 +98,8 @@ class Block:
     def show(self):
         plt.imshow(self.img)
 
+    """
+    #TODO: Use something else than PyGame for Rectengular collision checking
     def collides_with(self, other) -> bool:
         '''
         Evalutes whether this object collides with another Block
@@ -109,6 +111,7 @@ class Block:
             return True
         else:
             return False
+    """
 
     def _normalized_area(self) -> float:
         '''
@@ -130,6 +133,7 @@ class Page:
         self.ratio = None
         self.blocks: list = []
         self.img = None # Numpy array
+        self.img_diluted = None
         self.dilation_used = None
 
     def __iter__(self):
@@ -138,7 +142,7 @@ class Page:
     def __repr__(self):
         return f'Page(id={self.id}, page={self.page}, blocks={len(self.blocks)})'
 
-    def process(self, dilation_iterations: int = 6, ocr=False):
+    def process(self, dilation_iterations: int = 3, ocr=False):
         '''
         Starts the processing from pdf to image to blocks
         '''
@@ -147,7 +151,7 @@ class Page:
         # This is the heavy path. We make the image, extract blocks and text
         self.img = convert_to_image(self.path, self.page)
         self.ratio = translate_image_size_to_pdf_size(self.path, self.img, self.page)
-        blocks_coords: list = extract_block_coords_from_image(self.img, dilation_iterations)
+        blocks_coords, self.img_diluted = extract_block_coords_from_image(self.img, dilation_iterations)
         blocks_images: list = extract_block_image_from_coords(self.img, blocks_coords)
         if ocr:
             blocks_text: list = [pytesseract.image_to_string(img) for img in blocks_images]
@@ -177,8 +181,42 @@ class Page:
         return round(sum([b.area for b in self.blocks]), ndigits=2)
 
     def save(self, path='./'):
-        out_path = os.path.join(path, self.id + '.png')
+        '''
+        Saves the original image to disk
+        '''
+        filename = self.id + '.png'
+        out_path = os.path.join(path, filename)
         plt.imsave(out_path, self.img)
+        return filename
+
+    def save_diluted(self, path='./'):
+        '''
+        Saves the diluted image to disk
+        '''
+        filename = self.id + f'_diluted_{self.dilation_used}' + '.png'
+        out_path = os.path.join(path, filename)
+        plt.imsave(out_path, self.img_diluted)
+        return filename
+
+    def save_img_with_bboxes(self, path='./'):
+        '''
+        Save the original image with bounding boxes to disk
+        '''
+        filename = self.id + f'_bboxes_{self.dilation_used}' + '.png'
+        out_path = os.path.join(path, filename)
+        img_with_bboxes = draw_bounding_boxes_on_image(self.img, self.blocks) 
+        plt.imsave(out_path, img_with_bboxes)
+        return filename
+
+    def show_all(self):
+        '''
+        Show all variants side-by-side
+        '''
+
+        img_with_bboxes = draw_bounding_boxes_on_image(self.img, self.blocks) 
+        f, (ax1, ax2) = plt.subplots(1,2, sharey=True)
+        ax1.imshow(self.img_diluted)
+        ax2.imshow(img_with_bboxes)
 
     def show(self):
         '''
@@ -187,5 +225,9 @@ class Page:
         plt.imshow(self.img)
 
     def show_bounding_boxes(self):
-        draw_bounding_boxes_on_image(self.img, self.blocks) 
+        img_with_bboxes = draw_bounding_boxes_on_image(self.img, self.blocks) 
+        plt.imshow(img_with_bboxes)
+
+    def show_diluted_image(self):
+        plt.imshow(self.img_diluted)
 
